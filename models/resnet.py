@@ -4,17 +4,6 @@ Modified from akamaster/pytorch_resnet_cifar10
 """
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.nn.init as init
-
-
-def _weights_init(m: nn.Module):
-    """Initialize weights with Kaiming He initialization for ReLU networks.
-
-    Args:
-        m: Module to initialize weights.
-    """
-    if isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d):
-        init.kaiming_normal_(m.weight)
 
 
 class LambdaLayer(nn.Module):
@@ -136,7 +125,13 @@ class ResNet(nn.Module):
         self.layer3 = self._make_layer(block, 64, num_blocks[2], stride=2)
         self.linear = nn.Linear(64, num_classes)
 
-        self.apply(_weights_init)
+        # From https://github.com/pytorch/vision/blob/0d75d9e/torchvision/models/resnet.py#L208
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
+            elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
 
     def _make_layer(self, block, planes, num_blocks, stride):
         """Initialize ResNet building block.
