@@ -1,0 +1,12 @@
+[tool.isort]
+profile = "black"
+known_third_party = ["wandb"]
+
+[tool.pydocstyle]
+convention = "google"
+
+[tool.flake8]
+max-line-length = 88
+ignore = [
+    "E266",
+]

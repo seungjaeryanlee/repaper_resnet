@@ -1,0 +1,75 @@
+### Default experiment hyperparameters 
+
+# Transform
+transforms:
+  train:
+    name: FlipCrop
+    reprs: []
+  valid:
+    name: Identity
+    reprs: []
+
+# Dataset
+datasets:
+  train:
+    name: CIFAR10LT
+    ir: 100
+  valid:
+    name: CIFAR10
+
+# Sampler
+samplers:
+  train:
+    name: RandomSampler
+  valid:
+    name: SequentialSampler
+
+# DataLoader
+data_loaders:
+  train:
+    batch_size: 128
+    num_workers: 8
+    pin_memory: True
+  valid:
+    batch_size: 128
+    num_workers: 8
+    pin_memory: True
+
+# Model
+model:
+  name: ResNet_32
+  num_classes: 10
+
+# Loss
+loss:
+  name: CrossEntropyLoss
+
+# Optimizer
+optimizer:
+  name: SGD
+  SGD:
+    lr: 0.1
+    momentum: 0.9
+    weight_decay: 2e-4
+
+# LR Scheduler
+lr_scheduler:
+  names:
+  - LinearLR
+  - MultiStepLR
+  LinearLR:
+    start_factor: 1e-8
+    total_iters: 5
+  MultiStepLR:
+    milestones: [160, 180]
+    gamma: 0.01
+
+# Training Loop
+num_epochs: 200
+
+# Weights & Biases
+wandb:
+  enable: True
+  entity: seungjaeryanlee
+  project: repaper_resnet
+  name: null
