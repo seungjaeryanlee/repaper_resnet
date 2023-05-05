@@ -2,8 +2,15 @@
 
 Modified from akamaster/pytorch_resnet_cifar10
 """
+from enum import Enum
+
 import torch.nn as nn
 import torch.nn.functional as F
+
+
+class ResNetShortcutOption(Enum):
+    A = "A"
+    B = "B"
 
 
 class LambdaLayer(nn.Module):
@@ -40,7 +47,13 @@ class BasicBlock(nn.Module):
 
     expansion = 1
 
-    def __init__(self, in_planes, planes, stride=1, option="A"):
+    def __init__(
+        self,
+        in_planes,
+        planes,
+        stride=1,
+        option: ResNetShortcutOption = ResNetShortcutOption.A,
+    ):
         """Initialize ResNet building block.
 
         Args:
@@ -61,9 +74,10 @@ class BasicBlock(nn.Module):
 
         self.shortcut = nn.Sequential()
         if stride != 1 or in_planes != planes:
-            if option == "A":
+            if option == ResNetShortcutOption.A:
                 """
                 For CIFAR10 ResNet paper uses option A.
+                "The shortcut still performs identity mapping, with extra zero entries padded for increasing dimensions. This option introduces no extra parameter."
                 """
                 self.shortcut = LambdaLayer(
                     lambda x: F.pad(
@@ -73,7 +87,7 @@ class BasicBlock(nn.Module):
                         0,
                     )
                 )
-            elif option == "B":
+            elif option == ResNetShortcutOption.B:
                 self.shortcut = nn.Sequential(
                     nn.Conv2d(
                         in_planes,
