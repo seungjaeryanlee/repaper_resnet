@@ -64,18 +64,20 @@ class BasicBlock(nn.Module):
         self.bn2 = nn.BatchNorm2d(planes)
         self.relu = nn.ReLU(inplace=True)
 
-        """
-        For CIFAR10 ResNet paper uses option A.
-        "The shortcut still performs identity mapping, with extra zero entries padded for increasing dimensions. This option introduces no extra parameter."
-        """
-        self.shortcut = LambdaLayer(
-            lambda x: F.pad(
-                x[:, :, ::2, ::2],
-                (0, 0, 0, 0, planes // 4, planes // 4),
-                "constant",
-                0,
+        self.shortcut = nn.Sequential()
+        if stride != 1 or in_planes != planes:
+            """
+            For CIFAR10 ResNet paper uses option A.
+            "The shortcut still performs identity mapping, with extra zero entries padded for increasing dimensions. This option introduces no extra parameter."
+            """
+            self.shortcut = LambdaLayer(
+                lambda x: F.pad(
+                    x[:, :, ::2, ::2],
+                    (0, 0, 0, 0, planes // 4, planes // 4),
+                    "constant",
+                    0,
+                )
             )
-        )
 
     def forward(self, x):
         """Forward pass."""
