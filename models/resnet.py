@@ -10,21 +10,24 @@ class LambdaLayer(nn.Module):
     """Module encapsulating a Python method.
 
     Attributes:
-        lambd: Method to be encapsulated.
+        lambda_: Method to be encapsulated.
     """
 
-    def __init__(self, lambd):
+    def __init__(self, lambda_):
         """Initialize module.
 
+        Following PEP8, `single_trailing_underscore_` is used  to avoid conflicts with
+        Python keyword.
+
         Args:
-            lambd: Method to be encapsulated.
+            lambda_: Method to be encapsulated.
         """
         super(LambdaLayer, self).__init__()
-        self.lambd = lambd
+        self.lambda_ = lambda_
 
     def forward(self, x):
         """Forward pass."""
-        return self.lambd(x)
+        return self.lambda_(x)
 
 
 class BasicBlock(nn.Module):
