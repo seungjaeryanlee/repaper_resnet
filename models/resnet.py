@@ -2,15 +2,8 @@
 
 Modified from akamaster/pytorch_resnet_cifar10
 """
-from enum import Enum
-
 import torch.nn as nn
 import torch.nn.functional as F
-
-
-class ResNetShortcutOption(Enum):
-    A = "A"
-    B = "B"
 
 
 class LambdaLayer(nn.Module):
@@ -52,7 +45,6 @@ class BasicBlock(nn.Module):
         in_planes,
         planes,
         stride=1,
-        option: ResNetShortcutOption = ResNetShortcutOption.A,
     ):
         """Initialize ResNet building block.
 
@@ -60,7 +52,6 @@ class BasicBlock(nn.Module):
             in_planes: Number of input filters for first convolutional layer.
             planes: Number of output filters for first convolutional layer.
             stride: Stride for first convolutiona layer.
-            option: Shortcut option.
         """
         super(BasicBlock, self).__init__()
         self.conv1 = nn.Conv2d(
@@ -73,32 +64,18 @@ class BasicBlock(nn.Module):
         self.bn2 = nn.BatchNorm2d(planes)
         self.relu = nn.ReLU(inplace=True)
 
-        self.shortcut = nn.Sequential()
-        if stride != 1 or in_planes != planes:
-            if option == ResNetShortcutOption.A:
-                """
-                For CIFAR10 ResNet paper uses option A.
-                "The shortcut still performs identity mapping, with extra zero entries padded for increasing dimensions. This option introduces no extra parameter."
-                """
-                self.shortcut = LambdaLayer(
-                    lambda x: F.pad(
-                        x[:, :, ::2, ::2],
-                        (0, 0, 0, 0, planes // 4, planes // 4),
-                        "constant",
-                        0,
-                    )
-                )
-            elif option == ResNetShortcutOption.B:
-                self.shortcut = nn.Sequential(
-                    nn.Conv2d(
-                        in_planes,
-                        self.expansion * planes,
-                        kernel_size=1,
-                        stride=stride,
-                        bias=False,
-                    ),
-                    nn.BatchNorm2d(self.expansion * planes),
-                )
+        """
+        For CIFAR10 ResNet paper uses option A.
+        "The shortcut still performs identity mapping, with extra zero entries padded for increasing dimensions. This option introduces no extra parameter."
+        """
+        self.shortcut = LambdaLayer(
+            lambda x: F.pad(
+                x[:, :, ::2, ::2],
+                (0, 0, 0, 0, planes // 4, planes // 4),
+                "constant",
+                0,
+            )
+        )
 
     def forward(self, x):
         """Forward pass."""
