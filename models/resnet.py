@@ -68,6 +68,7 @@ class BasicBlock(nn.Module):
         self.relu = nn.ReLU(inplace=True)
 
         self.shortcut = nn.Sequential()
+        self.shortcut2 = nn.Sequential()
         if stride != 1 or in_planes != planes:
             """
             For CIFAR10 ResNet paper uses option A.
@@ -83,6 +84,10 @@ class BasicBlock(nn.Module):
                     0,
                 )
             )
+            self.shortcut2 = nn.Sequential(
+                nn.Upsample(scale_factor=0.5, mode="nearest"),
+                nn.ConstantPad3d((0, 0, 0, 0, planes // 4, planes // 4), 0),
+            )
 
     def forward(self, x):
         """Forward pass."""
@@ -91,6 +96,15 @@ class BasicBlock(nn.Module):
         out = self.relu(out)
         out = self.conv2(out)
         out = self.bn2(out)
+        # print("Shortcut type: ", self.shortcut)
+        # print("Input shape: ", x.shape)
+        # print("Downsample shape: ", x[:, :, ::2, ::2].shape)
+        # print("Shortcut shape: ", self.shortcut(x).shape)
+        # print("Shortcut2 shape: ", self.shortcut2(x).shape)
+        # print("Shortcut sample: ", self.shortcut(x)[0][0])
+        # print("Shortcut2 sample: ", self.shortcut2(x)[0][0])
+        import torch
+        assert torch.allclose(self.shortcut(x), self.shortcut2(x))
         out += self.shortcut(x)
         out = self.relu(out)
         return out
