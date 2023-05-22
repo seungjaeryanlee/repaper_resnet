@@ -2,6 +2,8 @@
 data/
 # Weights & Biases logs
 wandb/
+# Checkpoints
+checkpoints/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
