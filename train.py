@@ -5,6 +5,7 @@ import torch
 import wandb
 from omegaconf import OmegaConf
 
+from checkpoints import save_checkpoint
 from configs import load_config
 from data_loaders import init_data_loader
 from datasets import init_dataset
@@ -100,6 +101,18 @@ def train(CONFIG):
                 },
                 step=epoch_i,
             )
+
+        # Save checkpoint
+        if CONFIG.checkpoint.save.enable and (epoch_i in CONFIG.checkpoint.save.epochs):
+            checkpoint_filepath = f"checkpoints/{wandb.run.name}__epoch_{epoch_i}.pt"
+            save_checkpoint(
+                model,
+                optimizer,
+                lr_scheduler,
+                checkpoint_filepath,
+                finished_epoch=epoch_i,
+            )
+            wandb.save(checkpoint_filepath)
 
         # Update learning rate
         lr_scheduler.step()
