@@ -71,7 +71,9 @@ class BasicBlock(nn.Module):
         if stride != 1 or in_planes != planes:
             """
             For CIFAR10 ResNet paper uses option A.
-            "The shortcut still performs identity mapping, with extra zero entries padded for increasing dimensions. This option introduces no extra parameter."
+            "The shortcut still performs identity mapping, with extra zero entries
+            padded for increasing dimensions. This option introduces no extra
+            parameter."
             """
             self.shortcut = LambdaLayer(
                 lambda x: F.pad(
@@ -127,7 +129,7 @@ class ResNet(nn.Module):
         self.pool = nn.AvgPool2d(8)
         self.linear = nn.Linear(64, num_classes)
 
-        # From https://github.com/pytorch/vision/blob/0d75d9e/torchvision/models/resnet.py#L208
+        # From pytorch/vision Commit 0d75d9e torchvision/models/resnet.py Line 208
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
