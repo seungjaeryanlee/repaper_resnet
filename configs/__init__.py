@@ -5,7 +5,7 @@ import os
 from omegaconf import OmegaConf
 
 DEFAULT_CONFIG_FILENAME = "base.yaml"
-MORE_CONFIGS_KEY = "more_configs"
+MORE_CONFIGS_KEY = "mods"
 
 
 def load_config():
