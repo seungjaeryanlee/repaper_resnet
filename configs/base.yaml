@@ -62,6 +62,12 @@ lr_scheduler:
 # Training Loop
 num_epochs: 182
 
+# Checkpoints
+checkpoint:
+  save:
+    enable: True
+    epochs: [181]
+
 # Weights & Biases
 wandb:
   enable: True
