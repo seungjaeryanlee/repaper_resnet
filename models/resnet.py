@@ -1,6 +1,5 @@
 """This file defines the ResNet architecture for CIFAR-10/100 dataset."""
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 class BasicBlock(nn.Module):
