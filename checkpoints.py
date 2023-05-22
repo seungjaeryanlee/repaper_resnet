@@ -1,3 +1,4 @@
+"""Save and load model, optimizer, and LR scheduler."""
 import os
 
 import torch
@@ -8,8 +9,17 @@ def save_checkpoint(
     optimizer,
     lr_scheduler,
     checkpoint_filepath: str,
-    finished_epoch,
+    finished_epoch: int,
 ):
+    """Save checkpoint to specified filepath.
+
+    Args:
+        model: Model to save the state of
+        optimizer: Optimizer to save the state of
+        lr_scheduler: Learning rate scheduler to save the state of
+        checkpoint_filepath: Filepath to save the checkpoint to
+        finished_epoch: Number of epochs used to train the model
+    """
     checkpoint_dirpath = "/".join(checkpoint_filepath.split("/")[:-1])
     os.makedirs(checkpoint_dirpath, exist_ok=True)
     torch.save(
@@ -33,6 +43,17 @@ def load_checkpoint(
     lr_scheduler,
     checkpoint_filepath: str,
 ):
+    """Load checkpoint from specified filepath.
+
+    Args:
+        model: Model to load the state to
+        optimizer: Optimizer to load the state to
+        lr_scheduler: Learning rate scheduler to load the state to
+        checkpoint_filepath: Filepath to load the checkpoint from
+
+    Returns:
+        Next epoch index.
+    """
     checkpoint = torch.load(checkpoint_filepath)
     model.load_state_dict(checkpoint["model_state_dict"])
     if optimizer is not None:
