@@ -1,41 +1,5 @@
-"""This file defines the ResNet architecture for CIFAR-10/100 dataset.
-
-Modified from akamaster/pytorch_resnet_cifar10
-"""
+"""This file defines the ResNet architecture for CIFAR-10/100 dataset."""
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.nn.init as init
-
-
-def _weights_init(m: nn.Module):
-    """Initialize weights with Kaiming He initialization for ReLU networks.
-
-    Args:
-        m: Module to initialize weights.
-    """
-    if isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d):
-        init.kaiming_normal_(m.weight)
-
-
-class LambdaLayer(nn.Module):
-    """Module encapsulating a Python method.
-
-    Attributes:
-        lambd: Method to be encapsulated.
-    """
-
-    def __init__(self, lambd):
-        """Initialize module.
-
-        Args:
-            lambd: Method to be encapsulated.
-        """
-        super(LambdaLayer, self).__init__()
-        self.lambd = lambd
-
-    def forward(self, x):
-        """Forward pass."""
-        return self.lambd(x)
 
 
 class BasicBlock(nn.Module):
@@ -51,14 +15,18 @@ class BasicBlock(nn.Module):
 
     expansion = 1
 
-    def __init__(self, in_planes, planes, stride=1, option="A"):
+    def __init__(
+        self,
+        in_planes,
+        planes,
+        stride=1,
+    ):
         """Initialize ResNet building block.
 
         Args:
             in_planes: Number of input filters for first convolutional layer.
             planes: Number of output filters for first convolutional layer.
-            stride: Stride for first convolutiona layer.
-            option: Shortcut option.
+            stride: Stride for first convolutional layer.
         """
         super(BasicBlock, self).__init__()
         self.conv1 = nn.Conv2d(
@@ -69,39 +37,30 @@ class BasicBlock(nn.Module):
             planes, planes, kernel_size=3, stride=1, padding=1, bias=False
         )
         self.bn2 = nn.BatchNorm2d(planes)
+        self.relu = nn.ReLU(inplace=True)
 
         self.shortcut = nn.Sequential()
         if stride != 1 or in_planes != planes:
-            if option == "A":
-                """
-                For CIFAR10 ResNet paper uses option A.
-                """
-                self.shortcut = LambdaLayer(
-                    lambda x: F.pad(
-                        x[:, :, ::2, ::2],
-                        (0, 0, 0, 0, planes // 4, planes // 4),
-                        "constant",
-                        0,
-                    )
-                )
-            elif option == "B":
-                self.shortcut = nn.Sequential(
-                    nn.Conv2d(
-                        in_planes,
-                        self.expansion * planes,
-                        kernel_size=1,
-                        stride=stride,
-                        bias=False,
-                    ),
-                    nn.BatchNorm2d(self.expansion * planes),
-                )
+            """
+            For CIFAR10 ResNet paper uses option A.
+            "The shortcut still performs identity mapping, with extra zero entries
+            padded for increasing dimensions. This option introduces no extra
+            parameter."
+            """
+            self.shortcut = nn.Sequential(
+                nn.Upsample(scale_factor=0.5, mode="nearest"),
+                nn.ConstantPad3d((0, 0, 0, 0, planes // 4, planes // 4), 0),
+            )
 
     def forward(self, x):
         """Forward pass."""
-        out = F.relu(self.bn1(self.conv1(x)))
-        out = self.bn2(self.conv2(out))
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.relu(out)
+        out = self.conv2(out)
+        out = self.bn2(out)
         out += self.shortcut(x)
-        out = F.relu(out)
+        out = self.relu(out)
         return out
 
 
@@ -131,12 +90,20 @@ class ResNet(nn.Module):
 
         self.conv1 = nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(16)
+        self.relu = nn.ReLU(inplace=True)
         self.layer1 = self._make_layer(block, 16, num_blocks[0], stride=1)
         self.layer2 = self._make_layer(block, 32, num_blocks[1], stride=2)
         self.layer3 = self._make_layer(block, 64, num_blocks[2], stride=2)
+        self.pool = nn.AvgPool2d(8)
         self.linear = nn.Linear(64, num_classes)
 
-        self.apply(_weights_init)
+        # From pytorch/vision Commit 0d75d9e torchvision/models/resnet.py Line 208
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
+            elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
 
     def _make_layer(self, block, planes, num_blocks, stride):
         """Initialize ResNet building block.
@@ -160,11 +127,16 @@ class ResNet(nn.Module):
 
     def forward(self, x):
         """Forward pass."""
-        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.relu(out)
+
         out = self.layer1(out)
         out = self.layer2(out)
         out = self.layer3(out)
-        out = F.avg_pool2d(out, out.size()[3])
+
+        out = self.pool(out)
         out = out.view(out.size(0), -1)
         out = self.linear(out)
+
         return out
