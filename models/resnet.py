@@ -1,7 +1,4 @@
-"""This file defines the ResNet architecture for CIFAR-10/100 dataset.
-
-Modified from akamaster/pytorch_resnet_cifar10
-"""
+"""This file defines the ResNet architecture for CIFAR-10/100 dataset."""
 import torch.nn as nn
 import torch.nn.functional as F
 
