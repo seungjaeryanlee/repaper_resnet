@@ -27,7 +27,7 @@ class BasicBlock(nn.Module):
         Args:
             in_planes: Number of input filters for first convolutional layer.
             planes: Number of output filters for first convolutional layer.
-            stride: Stride for first convolutiona layer.
+            stride: Stride for first convolutional layer.
         """
         super(BasicBlock, self).__init__()
         self.conv1 = nn.Conv2d(
